@@ -4,16 +4,6 @@
 
 
 {run-once}
-<script type="text/javascript">
-<!--
-// load yui locally if not defined yet
-if ( window.YUI === undefined )
-{ldelim}
-    document.write('<sc'+'ript src={"javascript/yui/3.0/build/yui/yui-min.js"|ezdesign} type="text/javascript"><\/script>');
-    //YUI().buildPath = {ldelim}build: '{"javascript/yui/3.0/build/"|ezdesign}'{rdelim}
-{rdelim}
--->
-</script>
 {ezscript( array('ezyui::ez') )}
 
 <script type="text/javascript">
@@ -156,7 +146,7 @@ YUI().use('node', 'event', 'io-ez', function( Y )
     function _indexOfListItem( node )
     {
         var i = 0;
-        while ( node = node.previus('li') )
+        while ( node = node.previous('li') )
             ++i;
         return i;
     }
