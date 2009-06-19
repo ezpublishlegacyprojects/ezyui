@@ -55,7 +55,7 @@
     <script type="text/javascript" src={'lib/yui/3.0/build/yui/yui-min.js'|ezdesign}></script>
     <script type="text/javascript">
     <!--
-    yui_config.base = '{"lib/yui/3.0/build/"|ezdesign}';
+    yui_config.base = '{"lib/yui/3.0/build/"|ezdesign( 'no' )}';
     -->
     </script>
 {/if}
