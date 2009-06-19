@@ -1,0 +1,27 @@
+eZYUI extension installation documentation
+
+About eZYUI
+===========
+
+Add description about eZYUI extension here.
+
+Requirements
+============
+
+Add complete list of requirements
+
+Installation
+============
+
+Re-write rules
+**************
+
+eZYUI extension require correct re-write rule in order to load necessary files
+from the file system. This is required only when INI setting
+
+Virtual-Host setup
+------------------
+
+Add to your Virtual-Host setup following line:
+
+``^/extension/[^/]+/design/[^/]+/(stylesheets|flash|images|lib|javascripts?)/.* - [L]``
