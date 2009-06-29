@@ -125,7 +125,7 @@ class eZYuiServerCallFunctions
     {
         $url = self::getIndexDir() . 'ezyui/';
         return "
-YUI.add('io-ez', function( Y ){
+YUI( YUI3_config ).add('io-ez', function( Y ){
     var _serverUrl = '$url', _seperator = '@SEPERATOR$';
 
     function _ez( callArgs, c )

@@ -9,7 +9,7 @@
 <script type="text/javascript">
 <!--
 {literal}
-YUI().use('node', 'event', 'io-ez', function( Y )
+YUI( YUI3_config ).use('node', 'event', 'io-ez', function( Y )
 {
     var _inputs = false,
         _dropdownLI = 0,
