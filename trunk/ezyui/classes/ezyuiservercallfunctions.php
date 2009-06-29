@@ -112,6 +112,7 @@ class eZYuiServerCallFunctions
                 $keywords[] = $node['keyword'];
             }
         }
+        $keywords = array_unique( $keywords );
         //echo var_dump( $keywordStr );
 
         return $keywords;

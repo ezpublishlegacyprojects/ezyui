@@ -17,7 +17,7 @@ YUI().use('node', 'event', 'io-ez', function( Y )
         _timeout = null,
         _inpIndex = -1,
         _liIndex = 0;
-    
+
     Y.on( "domready", function( e )
     {
 
@@ -30,13 +30,12 @@ YUI().use('node', 'event', 'io-ez', function( Y )
             _div.id = 'ezyui_keyword_suggestion_dropdown';
             _div = Y.get('body').appendChild( _div );
 
-            // Avoid that enter submits the form while selecting keyword
-            var tempForm = Y.get('#editform');
-            if ( tempForm ) tempForm.on( 'submit', function(){ if ( _dropdownLI != 0 ) return false; else return true; } );
+            // Avoid that enter submits the form while selecting keyword (does not work at the moment..)
+            Y.get('#editform').on( 'submit', Y.bind( function( e ){ e.stopPropagation(); if ( _dropdownLI != 0 ) return false; else return true; }, this ) );
 
             //Cleanup and hide the keywords when the input box loses focus
-            _inputs.on( 'blur', function(){ _dropdownLI = 0; _div.setStyle('display', 'none'); });
-            
+            _inputs.on( 'blur', Y.bind( function(){ _dropdownLI = 0; _div.setStyle('display', 'none'); }, this ) );
+
             //event function on keydown on the input element
             _inputs.on( 'keydown', _press );
             _div.setStyle('display', 'none');
@@ -46,12 +45,12 @@ YUI().use('node', 'event', 'io-ez', function( Y )
     // var currentClassID = {$#object.content_class.id},
 
     function _callBack( id, o )
-    { 
+    {
         if ( o.responseText && o.responseText.length > 0 )
         {
             var content = o.responseText.split(',')
             _div.set('innerHTML', '<ul><li>' + content.join('</li><li>') + '</li></ul>' );
-    
+
             var inp = _inputs.item( _inpIndex );
             _div.setStyles({
                 top: inp.getY() + 22 + 'px',/*inp.getStyle('height')*/
@@ -66,11 +65,11 @@ YUI().use('node', 'event', 'io-ez', function( Y )
                 'text-align': 'left',
                 height: '200px',
             });
-    
+
             _dropdownLI = Y.all('#ezyui_keyword_suggestion_dropdown li');
             _dropdownLI.on('mouseover', _mouse );
             _dropdownLI.on('mousedown', Y.bind( _enter, this, inp ) );
-    
+
             _div.setStyle('display', '');
         }
         // TODO: show error text somehow
@@ -80,17 +79,17 @@ YUI().use('node', 'event', 'io-ez', function( Y )
     {
         //cancle that the event bubbles up to the form element
         e.stopPropagation();
-        clearTimeout(_timeout);
-        
+        clearTimeout( _timeout );
+
         var c = e.keyCode || e.which, node = e.currentTarget, keyword = node.get('value').split(',').pop().replace(/^\s+|\s+$/g, '');
-        
-        //break any futher action on specific keys like backspace
-        if ( c === 44 || c === 8 || c === 188 || c === 32 || c === 16 || c === 17 ||c === 18 || keyword.length < 1) return true;
-        //let up and down buttons change selection
-        else if ( (c == 38 || c == 40) && _dropdownLI != 0 ) return _select( c );
-        //select element on enter
-        else if ( c == 13 ) return _enter( 0, node );
-        
+
+        // Break any futher action on specific keys like backspace
+        if ( c === 44 || c === 8 || c === 188 || c === 32 || c === 16 || c === 17 || c === 18 || c === 37 || c === 39 || keyword.length < 1) return true;
+        // Let up and down buttons change selection
+        else if ( c === 38 || c === 40 ) return _dropdownLI != 0 ? _select( c ) : false;
+        // Select element on enter
+        else if ( c === 13 ) return _enter( node );
+
         _div.setStyle('display', 'none');
         _inpIndex = _indexOfInput( node, _inputs );
         _timeout = setTimeout( Y.bind( _call, this, (keyword +''+ String.fromCharCode(c)) ), (c == 46 ? 200 : 100) );
@@ -100,8 +99,8 @@ YUI().use('node', 'event', 'io-ez', function( Y )
     function _select( c )
     {
         var i = _liIndex;
-        _liIndex = i = (i < 0) ? 0 : i + c - 39;
-        _liIndex = i = ( _dropdownLI.length <= i ) ? _dropdownLI.length : i;
+        _liIndex = i = ( _dropdownLI == 0 || i < 0) ? 0 : i + c - 39;
+        _liIndex = i = ( _dropdownLI != 0 && _dropdownLI.size() <= i ) ? _dropdownLI.size() : i;
         return _setClass( i );
     }
 
@@ -113,12 +112,15 @@ YUI().use('node', 'event', 'io-ez', function( Y )
 
     function _setClass( i )
     {
-        if( i > 0 ) _dropdownLI.item( i - 1 ).addClass( 'selected' );
-        else _dropdownLI.removeClass( 'selected' );
+        if ( _dropdownLI != 0 )
+        {
+            if( i > 0 ) _dropdownLI.item( i - 1 ).addClass( 'selected' );
+            else _dropdownLI.removeClass( 'selected' );
+        }
         return false;
     }
 
-    function _enter( i, node )
+    function _enter( node )
     {
         if ( _dropdownLI != 0 && _liIndex > 0 )
         {
@@ -151,7 +153,7 @@ YUI().use('node', 'event', 'io-ez', function( Y )
         return i;
     }
 
-    function _call( i, key )
+    function _call( key )
     {
         Y.io.ez( 'ezyui::keyword::' + key, { on : { success: _callBack} } )
     }
