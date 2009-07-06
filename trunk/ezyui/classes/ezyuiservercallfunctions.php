@@ -139,7 +139,7 @@ YUI( YUI3_config ).add('io-ez', function( Y ){
     _ez.seperator = _seperator;
     Y.io.ez = _ez;
 
-}, '3.0.0pr2' ,{requires:['io-base']});
+}, '3.0.0b1' ,{requires:['io-base']});
         ";
     }
 
