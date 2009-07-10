@@ -16,6 +16,8 @@ $eZTemplateOperatorArray[] = array( 'script' => 'extension/ezyui/autoloads/ezyui
                                                                'fetch_main_node',
                                                                'json_encode',
                                                                'xml_encode',
-                                                               'node_encode'
+                                                               'node_encode',
+                                                               'ezyuirating',
+                                                               'fetch_by_yuirating'
 ) );
 ?>

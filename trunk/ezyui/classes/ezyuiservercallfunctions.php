@@ -50,6 +50,7 @@ class eZYuiServerCallFunctions
      *   is prefered because of encoding issues in urls
      * - limit, how many suggestions to return, default ini value is used if not set
      * - class id, serach is restricted to class id if set
+     * 
      * @param array $args [ 'keyword', 'limit', 'class_id' ] all optional
      */
     public static function keyword( $args )
@@ -118,14 +119,15 @@ class eZYuiServerCallFunctions
         return $keywords;
     }
 
-    /*
+    /**
      * Generates the javascript needed to do server calls directly from javascript
-    */
+     */
     public static function ez()
     {
         $url = self::getIndexDir() . 'ezyui/';
         return "
-YUI( YUI3_config ).add('io-ez', function( Y ){
+YUI( YUI3_config ).add('io-ez', function( Y )
+{
     var _serverUrl = '$url', _seperator = '@SEPERATOR$';
 
     function _ez( callArgs, c )
@@ -143,12 +145,101 @@ YUI( YUI3_config ).add('io-ez', function( Y ){
         ";
     }
 
+    /**
+     * Rate content objects
+     * Arguments:
+     * - object id to rate
+     * - rating, floating number from 0 to 5 (configurable) 
+     * 
+     * @param array $args [ 'contentobject_id', 'rating' ] all optional
+     */
+    public static function rate( $args )
+    {
+		$objId    = (int) $args[0];
+		$rate     = isset( $args[1] ) && is_numeric( $args[1] ) ? (float) str_replace(',', '.', $args[1] ) : null;
+		$obj      = $objId !== 0 ? eZContentObject::fetch( $objId ) : false;
+		$user     = eZUser::currentUser();
+		$maxRate  = 5;
+		
+		
+		if ( !$obj )
+		{
+		    return 'Could not find page!';
+		}
+		else if ( !$user instanceof eZUser )
+        {
+            return 'Could not fetch current user!';
+        }
+		else if ( !$obj->checkAccess('read') )
+		{
+		    return 'You don\'t have read access to the given page!';
+		}
+		else if ( $rate === null || $rate > $maxRate )
+		{
+		    return "Rating must be a number between 0 and $maxRate!";
+		}
+
+        $userId    = $user->attribute('contentobject_id');
+        $now       = time();
+        $sessionId = session_id();
+
+		if ( $user->attribute('is_logged_in') )
+		{
+			$selectSQL = "SELECT
+			                  COUNT(*) as count
+                          FROM
+                              ezcontentobject_rating 
+                          WHERE
+                              contentobject_id = $objId AND
+                              user_id = $userId";
+		}
+		else
+        {
+            // trick to use index withouth matching on user id
+        	$selectSQL = "SELECT
+                              COUNT(*) as count
+                          FROM
+                              ezcontentobject_rating 
+                          WHERE
+                              contentobject_id = $objId AND
+                              user_id <> 0 AND
+                              session_key = '$sessionId'";
+        }
+
+		$db = eZDB::instance();
+	    $rs = $db->arrayQuery( $selectSQL );
+	    if ( $rs === false )
+	    {
+	        return 'Rating table is missing, contact administrator!';
+	    }
+	    else if ( $rs[0]['count'] !== '0' )
+	    {
+	        return 'You are only allowed to vote 1 time per unique page!';
+	    }
+	    else
+	    {
+	        $rs = $db->query( "INSERT INTO ezcontentobject_rating 
+	                           VALUES ( $objId, $userId, '$sessionId', $rate, $now )" );
+	        if ( $rs !== true )
+	        {
+	            return 'Something went wrong on rating insert, contact administrator!';
+	        }
+	    }
+		
+		eZContentCacheManager::clearContentCache( $objId, true, false );
+
+		return 'ok';
+    }
+
     public static function getCacheTime( $functionName )
     {
         // this data only expires when this timestamp is increased
         return 1218018250;
     }
 
+    /**
+     * Internal function to get current index dir
+     */
     protected static function getIndexDir()
     {
         if ( self::$cachedIndexDir === null )

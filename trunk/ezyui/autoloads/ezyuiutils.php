@@ -48,7 +48,9 @@ class eZYuiUtils
                       'fetch_main_node',
                       'json_encode',
                       'xml_encode',
-                      'node_encode'
+                      'node_encode',
+                      'ezyuirating',
+                      'fetch_by_yuirating'
                       );
     }
 
@@ -82,7 +84,13 @@ class eZYuiUtils
                                                 'default' => array() ),
                                               'type' => array( 'type' => 'string',
                                                 'required' => false,
-                                                'default' => 'json' ))
+                                                'default' => 'json' )),
+                      'ezyuirating' => array( 'params' => array( 'type' => 'array',
+                                              'required' => true,
+                                              'default' => array() )),
+                      'fetch_by_yuirating' => array( 'params' => array( 'type' => 'array',
+                                              'required' => false,
+                                              'default' => array() ))
         );
                                               
     }
@@ -144,6 +152,38 @@ class eZYuiUtils
                 // Lets you use eZYuiAjaxContent::nodeEncode from templates
                 
                 $operatorValue = eZYuiAjaxContent::nodeEncode( $namedParameters['node'], $namedParameters['params'], $namedParameters['type'] );
+            } break;
+            case 'ezyuirating':
+            {
+                $ret = false;
+                $params = $namedParameters['params'];
+                $where = array();
+                
+                if ( isset( $params['node_id'] ))
+                {
+                    $obj = eZContentObject::fetchByNodeID( $params['node_id'], false );
+                    if ( isset( $obj['id'] ) ) $params['contentobject_id'] = $obj['id'];
+                }
+
+                if ( isset( $params['contentobject_id'] ))
+                {
+                    $where[] = eZYuiContentRating::getRatingByObjectSql( $params['contentobject_id'] );
+                }
+
+                if ( isset( $params['user_id'] ))
+                {
+                    $where[] = eZYuiContentRating::getRatingByUserSql( $params['user_id'] );
+                }
+
+                if ( isset( $params['owner_id'] ))
+                {
+                    $where[] = eZYuiContentRating::getRatingByOwnerSql( $params['owner_id'] );
+                }
+                $ret = eZYuiContentRating::getRatingWhere( $where );
+            } break;
+            case 'fetch_by_yuirating':
+            {
+                $ret = eZYuiContentRating::fetchNodeByRating( $namedParameters['params'] );
             } break;
         }
     }
