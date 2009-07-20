@@ -59,7 +59,7 @@
         combine: true
     {rdelim});
     // use this as parameter for YUI( YUI3_config ) for now, until yui 3.0 has a better way of setting global base path
-    var YUI3_config = {};
+    var YUI3_config = {ldelim}{rdelim};
     -->
     </script>
 {else}
