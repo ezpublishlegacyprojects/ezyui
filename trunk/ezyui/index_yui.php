@@ -162,12 +162,12 @@ $access = changeAccess( $access );
 
 // check module name
 $moduleName = $uri->element();
-/*if ( strpos( $moduleName, 'index_yui.php' ) !== false  )
+if ( strpos( $moduleName, 'index.php' ) !== false  )
 {
-    // this is probably a workaround for #14720
     $uri->increase();
     $moduleName = $uri->element();
-}*/
+}
+
 if ( $moduleName === '' )
 {
     exitWithInternalError( 'Did not find module info in url. (165)' );
