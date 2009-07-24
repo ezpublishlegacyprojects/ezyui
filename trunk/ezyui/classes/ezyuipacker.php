@@ -50,12 +50,6 @@
  
 */
 
-//include_once( 'lib/ezfile/classes/ezfile.php' );
-//include_once( 'lib/ezutils/classes/ezuri.php' );
-//include_once( 'kernel/common/ezoverride.php' );
-//include_once( 'extension/ezyui/lib/jsmin.php' );
-//include_once( 'extension/ezyui/classes/ezyuiservercall.php' );
-
 class eZYuiPacker
 {
     /**
@@ -71,7 +65,7 @@ class eZYuiPacker
     static protected $cacheDir = null;
     
     // static :: Builds the xhtml tag(s) for scripts
-    static function buildJavascriptTag( $scriptFiles, $type, $lang, $packLevel = 2, $wwwInCacheHash = false )
+    static function buildJavascriptTag( $scriptFiles, $type, $lang, $packLevel = 2, $wwwInCacheHash = false, $charset = "utf-8" )
     {
         $ret = '';
         $lang = $lang ? ' language="' . $lang . '"' : '';
@@ -87,7 +81,7 @@ class eZYuiPacker
                 {
                     $packedFile = $http->createRedirectUrl( $packedFile, array( 'pre_url' => false ) );
                 }
-                $ret .= "<script$lang type=\"$type\" src=\"$packedFile\"></script>\r\n";
+                $ret .= "<script$lang type=\"$type\" src=\"$packedFile\" charset=\"$charset\"></script>\r\n";
             }
             else
             {
@@ -98,7 +92,7 @@ class eZYuiPacker
     }
     
     // static :: Builds the xhtml tag(s) for stylesheets
-    static function buildStylesheetTag( $cssFiles, $media, $type, $rel, $packLevel = 3, $wwwInCacheHash = true )
+    static function buildStylesheetTag( $cssFiles, $media, $type, $rel, $packLevel = 3, $wwwInCacheHash = true, $charset = "utf-8" )
     {
         $ret = '';
         $packedFiles = eZYuiPacker::packFiles( $cssFiles, 'stylesheets/', '_' . $media . '.css', $packLevel, $wwwInCacheHash );
@@ -262,10 +256,15 @@ class eZYuiPacker
             // or is it a relative path
             else
             {
-                $file = $subPath . $file;
+                $file = $file;
                 $triedFiles = array();
                 $match = eZTemplateDesignResource::fileMatch( $bases, '', $file, $triedFiles );
-
+                // Work around many extensions use design.ini[JavaScriptSettings].JavaScriptList but the path is not correct 
+                if ( $match === false )
+                {
+                	$file = $subPath . $file;
+                	$match = eZTemplateDesignResource::fileMatch( $bases, '', $file, $triedFiles );
+                }
                 if ( $match === false )
                 {
                     eZDebug::writeWarning( "Could not find: $file", __METHOD__ );

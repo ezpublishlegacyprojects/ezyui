@@ -83,6 +83,9 @@ class eZYuiPackerTemplateFunctions
                                            'language' => array( 'type' => 'string',
                                               'required' => false,
                                               'default' => 'javascript' ),
+                                           'charset' => array( 'type' => 'string',
+                                              'required' => false,
+                                              'default' => 'utf-8' ),
                                            'pack_level' => array( 'type' => 'integer',
                                               'required' => false,
                                               'default' => 2 )),
@@ -104,6 +107,9 @@ class eZYuiPackerTemplateFunctions
                                         'rel' => array( 'type' => 'string',
                                               'required' => false,
                                               'default' => 'stylesheet' ),
+                                        'charset' => array( 'type' => 'string',
+                                              'required' => false,
+                                              'default' => 'utf-8' ),
                                         'pack_level' => array( 'type' => 'integer',
                                               'required' => false,
                                               'default' => 3 ) ),
@@ -137,6 +143,7 @@ class eZYuiPackerTemplateFunctions
                 $ret = eZYuiPacker::buildJavascriptTag( $namedParameters['script_array'],
                                                      $namedParameters['type'],
                                                      $namedParameters['language'],
+                                                     $namedParameters['charset'],
                                                      $packLevel );                    
             } break;
             case 'ezcss':
@@ -145,6 +152,7 @@ class eZYuiPackerTemplateFunctions
                                                      $namedParameters['media'],
                                                      $namedParameters['type'],
                                                      $namedParameters['rel'],
+                                                     $namedParameters['charset'],
                                                      $packLevel );                    
             } break;
             case 'ezscriptfiles':
