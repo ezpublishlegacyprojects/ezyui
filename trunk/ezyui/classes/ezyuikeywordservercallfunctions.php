@@ -1,8 +1,8 @@
 <?php
 //
-// Definition of eZYuiContentRatingclass
+// Definition of eZYuiKeywordServerCallFunctions
 //
-// Created on: <09-Jul-2009 12:42:08 ar>
+// Created on: <27-Jul-2009 12:42:08 ar>
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Yui extension for eZ Publish
@@ -29,7 +29,7 @@
 //
 
 /*
-  Template operator for getting user rating of content
+eZ Yui Server Call class for keywords
 */
 
 
