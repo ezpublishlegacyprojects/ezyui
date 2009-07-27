@@ -44,82 +44,6 @@ class eZYuiServerCallFunctions
     }
 
     /**
-     * Get keywords by input parameters
-     * Arguments:
-     * - keyword string to search for, but postvariable Keyword
-     *   is prefered because of encoding issues in urls
-     * - limit, how many suggestions to return, default ini value is used if not set
-     * - class id, serach is restricted to class id if set
-     * 
-     * @param array $args [ 'keyword', 'limit', 'class_id' ] all optional
-     */
-    public static function keyword( $args )
-    {
-        $ezyuiINI = eZINI::instance( 'ezyui.ini' );
-        
-        $keywordLimit            = 30;
-        $keywordSuggestionsArray = $ezyuiINI->variable( 'Keyword', 'SuggestionsArray' );
-        $classID                 = false;
-        $keywordStr              = '';
-
-        if ( isset( $args[0] ) )
-        {
-            $keywordStr = $args[0];
-        }
-
-        if ( isset( $args[1] ) )
-        {
-            $keywordLimit = (int) $args[1];
-        }
-        else if( $ezyuiINI->hasVariable( 'Keyword', 'Limit' ) )
-        {
-            $keywordLimit = (int) $ezyuiINI->variable( 'Keyword', 'Limit' );
-        }
-
-        if ( isset( $args[2] ) )
-        {
-            $classID = (int) $args[2];
-        }
-
-        if ( !is_array( $keywordSuggestionsArray ) )
-        {
-            $keywordSuggestionsArray = array();
-        }
-
-        $keywords = array();
-        $searchList = array( 'result' => array() );
-
-        // first return keyword matches from ini
-        foreach ( $keywordSuggestionsArray as $string )
-        {
-            if( $keywordStr === '' || strpos( strtolower( $string ), strtolower( $keywordStr ) ) === 0 )
-            {
-                $keywords[] = $string;
-                --$keywordLimit;
-                if ( $keywordLimit === 0 ) break;
-            }
-        }
-
-        if ( $keywordLimit > 0 )
-        {
-            $searchList = eZContentFunctionCollection::fetchKeyword( $keywordStr, $classID, 0, $keywordLimit );
-        }
-
-        //then return matches from database
-        foreach ( $searchList['result'] as $node )
-        {
-            if ( $node['keyword'] )
-            {
-                $keywords[] = $node['keyword'];
-            }
-        }
-        $keywords = array_unique( $keywords );
-        //echo var_dump( $keywordStr );
-
-        return $keywords;
-    }
-
-    /**
      * Generates the javascript needed to do server calls directly from javascript
      */
     public static function ez()
@@ -145,92 +69,6 @@ YUI( YUI3_config ).add('io-ez', function( Y )
         ";
     }
 
-    /**
-     * Rate content objects
-     * Arguments:
-     * - object id to rate
-     * - rating, floating number from 0 to 5 (configurable) 
-     * 
-     * @param array $args [ 'contentobject_id', 'rating' ] all optional
-     */
-    public static function rate( $args )
-    {
-		$objId    = (int) $args[0];
-		$rate     = isset( $args[1] ) && is_numeric( $args[1] ) ? (float) str_replace(',', '.', $args[1] ) : null;
-		$obj      = $objId !== 0 ? eZContentObject::fetch( $objId ) : false;
-		$user     = eZUser::currentUser();
-		$maxRate  = 5;
-		
-		
-		if ( !$obj )
-		{
-		    return 'Could not find page!';
-		}
-		else if ( !$user instanceof eZUser )
-        {
-            return 'Could not fetch current user!';
-        }
-		else if ( !$obj->checkAccess('read') )
-		{
-		    return 'You don\'t have read access to the given page!';
-		}
-		else if ( $rate === null || $rate > $maxRate )
-		{
-		    return "Rating must be a number between 0 and $maxRate!";
-		}
-
-        $userId    = $user->attribute('contentobject_id');
-        $now       = time();
-        $sessionId = session_id();
-
-		if ( $user->attribute('is_logged_in') )
-		{
-			$selectSQL = "SELECT
-			                  COUNT(*) as count
-                          FROM
-                              ezcontentobject_rating 
-                          WHERE
-                              contentobject_id = $objId AND
-                              user_id = $userId";
-		}
-		else
-        {
-            // trick to use index withouth matching on user id
-        	$selectSQL = "SELECT
-                              COUNT(*) as count
-                          FROM
-                              ezcontentobject_rating 
-                          WHERE
-                              contentobject_id = $objId AND
-                              user_id <> 0 AND
-                              session_key = '$sessionId'";
-        }
-
-		$db = eZDB::instance();
-	    $rs = $db->arrayQuery( $selectSQL );
-	    if ( $rs === false )
-	    {
-	        return 'Rating table is missing, contact administrator!';
-	    }
-	    else if ( $rs[0]['count'] !== '0' )
-	    {
-	        return 'You are only allowed to vote 1 time per unique page!';
-	    }
-	    else
-	    {
-	        $rs = $db->query( "INSERT INTO ezcontentobject_rating 
-	                           VALUES ( $objId, $userId, '$sessionId', $rate, $now )" );
-	        if ( $rs !== true )
-	        {
-	            return 'Something went wrong on rating insert, contact administrator!';
-	        }
-	    }
-		
-		eZContentCacheManager::clearContentCache( $objId, true, false );
-
-		return 'ok';
-    }
-
     public static function getCacheTime( $functionName )
     {
         // this data only expires when this timestamp is increased
@@ -242,15 +80,14 @@ YUI( YUI3_config ).add('io-ez', function( Y )
      */
     protected static function getIndexDir()
     {
-        if ( self::$cachedIndexDir === null )
+        static $cachedIndexDir = null;
+    	if ( $cachedIndexDir === null )
         {
             $sys = eZSys::instance();
-            self::$cachedIndexDir = $sys->indexDir() . '/';
+            $cachedIndexDir = $sys->indexDir() . '/';
         }
-        return self::$cachedIndexDir;
+        return $cachedIndexDir;
     }
-    
-    protected static $cachedIndexDir = null;
 }
 
 ?>

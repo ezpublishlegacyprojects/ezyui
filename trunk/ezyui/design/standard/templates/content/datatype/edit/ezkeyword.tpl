@@ -155,7 +155,7 @@ YUI( YUI3_config ).use('node', 'event', 'io-ez', function( Y )
 
     function _call( key )
     {
-        Y.io.ez( 'ezyui::keyword::' + key, { on : { success: _callBack} } )
+        Y.io.ez( 'ezyuikeyword::keyword::' + key, { on : { success: _callBack} } )
     }
 });
 {/literal}

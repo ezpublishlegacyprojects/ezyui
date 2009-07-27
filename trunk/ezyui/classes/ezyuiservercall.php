@@ -57,23 +57,34 @@ class eZYuiServerCall
             return null;   
         }
 
-        $className = array_shift( $arguments );
+        $className = $callClassName = array_shift( $arguments );
         $functionName = array_shift( $arguments );
         $isTemplateFunction = false;
+        $permissionFunctions = false;
+        $permissionPrFunction = false;
         $ezyuiIni = eZINI::instance( 'ezyui.ini' );
+        $ezyuiFunctionList = $ezyuiIni->variable( 'eZYuiServerCall', 'FunctionList' );
 
-        if ( $ezyuiIni->hasGroup( 'eZYuiServerCall_' . $className ) )
+        if ( $ezyuiIni->hasGroup( 'eZYuiServerCall_' . $callClassName ) )
         {
            // load file if defined, else use autoload 
-           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $className, 'File' ) )
-                include_once( $ezyuiIni->variable( 'eZYuiServerCall_' . $className, 'File' ) );
+           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $callClassName, 'File' ) )
+                include_once( $ezyuiIni->variable( 'eZYuiServerCall_' . $callClassName, 'File' ) );
 
-           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $className, 'TemplateFunction' ) )
-                $isTemplateFunction = $ezyuiIni->variable( 'eZYuiServerCall_' . $className, 'TemplateFunction' ) === 'true';
+           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $callClassName, 'TemplateFunction' ) )
+                $isTemplateFunction = $ezyuiIni->variable( 'eZYuiServerCall_' . $callClassName, 'TemplateFunction' ) === 'true';
 
-           // get class name if defined, else use first argument as class name 
-           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $className, 'Class' ) )
-                $className = $ezyuiIni->variable( 'eZYuiServerCall_' . $className, 'Class' );
+           // check permissions
+           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $callClassName, 'Functions' ) )
+                $permissionFunctions = $ezyuiIni->variable( 'eZYuiServerCall_' . $callClassName, 'Functions' );
+
+           // check permissions
+           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $callClassName, 'PermissionPrFunction' ) )
+                $permissionPrFunction = $ezyuiIni->variable( 'eZYuiServerCall_' . $callClassName, 'PermissionPrFunction' ) === 'enabled';
+
+           // get class name if defined, else use first argument as class name
+           if ( $ezyuiIni->hasVariable( 'eZYuiServerCall_' . $callClassName, 'Class' ) )
+                $className = $ezyuiIni->variable( 'eZYuiServerCall_' . $callClassName, 'Class' );
         }
         else if ( $requireIniGroupe )
         {
@@ -85,6 +96,14 @@ class eZYuiServerCall
         if ( $checkFunctionExistence && !self::staticHasCall( $className, $functionName, $isTemplateFunction  ) )
         {
             return null;
+        }
+
+        if ( $permissionFunctions !== false )
+        {
+        	if ( !self::hasAccess( $ezyuiFunctionList, $permissionFunctions, ( $permissionPrFunction ? $functionName : null ) ) )
+        	{
+        	    return null;
+        	}
         }
 
         return new eZYuiServerCall( $className, $functionName, $arguments, $isTemplateFunction );
@@ -111,6 +130,27 @@ class eZYuiServerCall
         }
     }
 
+    public static function hasAccess( $iniFunctionList, $requiredFunctions, $functionName = null )
+    {
+    	$currentUser = eZUser::currentUser();
+        foreach( $requiredFunctions as $requiredFunction )
+        {
+        	$permissionName = $requiredFunction . ( $functionName !== null ? '_' . $functionName : ''  );
+        	if ( !in_array( $permissionName, $iniFunctionList ) )
+        	{
+        		eZDebug::writeWarning( "'$permissionName' is not defined in ezyui.ini[eZYuiServerCall]FunctionList", __METHOD__ );
+        		return false;
+        	}
+
+        	$accessResult = $currentUser->hasAccessTo( 'ezyui', 'call_' . $permissionName );
+        	if ( $accessResult[ 'accessWord' ] !== 'yes'  )
+        	{
+        		return false;
+        	}
+        }
+        return true;
+    }
+    
     public function hasCall()
     {
         return self::staticHasCall( $this->className, $this->functionName, $this->isTemplateFunction  );

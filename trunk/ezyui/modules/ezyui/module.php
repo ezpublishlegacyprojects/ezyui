@@ -12,7 +12,6 @@ $ViewList['hello'] = array(
     );
     
 $ViewList['call'] = array(
-    'functions' => array( 'call' ),
     'script' => 'call.php',
     'params' => array( 'function_arguments', 'type', 'interval' )
     );
@@ -24,8 +23,14 @@ $ViewList['run'] = array(
     );
 
 $FunctionList = array();
-$FunctionList['call'] = array();
 $FunctionList['run'] = array();
+
+$iniFunctionList = eZINI::instance('ezyui.ini')->variable( 'eZYuiServerCall', 'FunctionList' );
+
+foreach ( $iniFunctionList as $iniFunction )
+{
+    $FunctionList[ 'call_' . $iniFunction ] = array();
+} 
 
 
 
