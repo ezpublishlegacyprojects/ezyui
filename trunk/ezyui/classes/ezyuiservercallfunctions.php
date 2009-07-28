@@ -58,7 +58,59 @@ YUI( YUI3_config ).add('io-ez', function( Y )
     {
         callArgs = callArgs.join !== undefined ? callArgs.join( _seperator ) : callArgs;
         var url = _serverUrl + 'call/' + encodeURIComponent( callArgs );
+
+        if ( c === undefined )
+            c = {'headers': {}};
+        else if ( c.headers === undefined )
+            c.headers = {};
+
+        if ( c.headers.Accept === undefined )
+            c.headers.Accept = 'application/json,text/javascript,*/*';
+
+        if ( c.on === undefined )
+            c.on = {};
+
+        if ( c.on.success !== undefined )
+        {
+            c.on.successCallback = c.on.success;
+        }
+
+        c.on.success = _ioezSuccess;
+        _ioezSuccess._configBak = c;
+
         return Y.io( url, c );
+    }
+    
+    function _ioezSuccess( id, o )
+    {
+        if ( o.responseJSON !== undefined )
+        {
+            // do nothing, browser / lib did it for us
+        }
+        else if ( JSON.parse !== undefined )
+        {
+            // native json parse function
+            o.responseJSON = JSON.parse( o.responseText );
+        }
+        else
+        {
+            YUI( YUI3_config ).use('json-parse', function( Y2 )
+            {
+                o.responseJSON = Y2.JSON.parse( o.responseText ); 
+            });
+        }
+        var c = _ioezSuccess._configBak;
+        if ( o.responseJSON.error_text )
+        {
+            if ( c.on.failure !== undefined )
+                c.on.failure( id, { 'status':0, 'statusText': o.responseJSON.error_text } );
+            else
+                alert( o.responseJSON.error_text );
+        }
+        else
+        {
+            c.on.successCallback( id, o );
+        }
     }
 
     _ez.url = _serverUrl;
@@ -72,7 +124,7 @@ YUI( YUI3_config ).add('io-ez', function( Y )
     public static function getCacheTime( $functionName )
     {
         // this data only expires when this timestamp is increased
-        return 1218018250;
+        return 1248789665;
     }
 
     /**

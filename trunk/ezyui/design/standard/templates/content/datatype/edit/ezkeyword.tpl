@@ -46,9 +46,9 @@ YUI( YUI3_config ).use('node', 'event', 'io-ez', function( Y )
 
     function _callBack( id, o )
     {
-        if ( o.responseText && o.responseText.length > 0 )
+        if ( o.responseJSON && o.responseJSON.content.length > 0 )
         {
-            var content = o.responseText.split(',')
+            var content = o.responseJSON.content;
             _div.set('innerHTML', '<ul><li>' + content.join('</li><li>') + '</li></ul>' );
 
             var inp = _inputs.item( _inpIndex );
