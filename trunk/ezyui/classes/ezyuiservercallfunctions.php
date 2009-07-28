@@ -99,6 +99,7 @@ YUI( YUI3_config ).add('io-ez', function( Y )
                 o.responseJSON = Y2.JSON.parse( o.responseText ); 
             });
         }
+
         var c = _ioezSuccess._configBak;
         if ( o.responseJSON.error_text )
         {
